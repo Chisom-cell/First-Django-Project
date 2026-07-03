@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app">
+  <header>
+    <div class="eyebrow">Today</div>
+    <p>{{ greeting }}</p>
+    <h1>What needs <em>doing</em>?</h1>
+    <p class="sub">Add a task, check it off when it's done. Nothing here leaves this page.</p>
+  </header>
+
+  <form id="task-form">
+    <input id="task-input" type="text" placeholder="e.g. Reply to client email" autocomplete="off" maxlength="140">
+    <button type="submit" class="add">Add task</button>
+  </form>
+
+  <div class="meta-row">
+    <span id="count-label">0 tasks</span>
+    <div class="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="done">Done</button>
+    </div>
+  </div>
+
+  <ul id="list">
+    {% for task in tasks %}
+    {% if task.done  %}
+    <li class="item done ">
+      {% else %}
+      <li class="item">
+      {% endif %}
+
+      <span class="check" role="checkbox" aria-checked="{{task.done}}" tabindex="0">
+        <svg viewBox="0 0 22 22">
+      <circle cx="11" cy="11" r="9.3"></circle>
+      <path d="M6.5 11.5l3 3 6-6.5"></path>
+    </svg>
+      </span>
+       {{ task.text }} 
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="empty" id="empty-state" style="display:none;">
+    <div class="glyph">nothing yet</div>
+    <p>Type something above and press Add task.</p>
+  </div>
+</div>
+{% endblock content %}
+
+
