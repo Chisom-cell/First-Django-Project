@@ -4,11 +4,45 @@ from datetime import datetime
 from .models import Task
 from .forms import TaskForm
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import authenticate, login, logout
 
-
+from .forms import TaskForm, Registerform 
+from .models import Task
 
 
 # # Create your views here.
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    form = Registerform()
+    errors = None
+    
+    if request.method == "POST":
+        form = Registerform(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            else:
+                return redirect('login')
+        else:
+            errors = form.errors.as_data()
+            return redirect('register')
+        
+    context = {
+        'form': form,
+        'errors': errors
+    }
+    return render(request, 'register.html', context)
+    
+
 # def home(request):   # request is compulsory for any view functionnyou are creating
 #     return HttpResponse('<h1>Welcome to codesignature\'s website<h1>')
 
@@ -48,8 +82,27 @@ def home(request):
     
     return render(request, 'home.html', context)
 
-def login(request):
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = authenticate(request,username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            return redirect("login")
     return render(request, 'login.html')
+
+def logout_view(request):
+    user = request.user
+    logout(request)
+    return redirect('login')
 
 def add_task(request):
     forms = TaskForm()
@@ -84,7 +137,7 @@ def filter_tasks(request, foo):
     context = {
         'tasks': tasks
     }
-    return render(request,'home. html', context)
+    return render(request,'home.html', context)
 
 def update_task(request, pk):
     task = Task.objects.get(id=pk)
