@@ -134,5 +134,11 @@ STORAGES = {
 }
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://stells-to-do-app.onrender.com",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
