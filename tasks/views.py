@@ -1,18 +1,31 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from datetime import datetime
-from .models import Task
-from .forms import TaskForm
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-from .forms import TaskForm, Registerform 
+# Consolidated imports
 from .models import Task
+from .forms import TaskForm, Registerform 
+
+# Helper function to generate greetings (DRF/Clean code practice)
+def get_greeting():
+    date = datetime.now()
+    h = int(date.strftime('%H'))
+    if h < 12:
+        return 'Good morning! Stells'
+    elif h < 16:
+        return 'Good afternoon! Stells'
+    elif h < 18:
+        return 'Good evening! Stells'
+    else:
+        return 'Good night! Stells'
 
 
-# # Create your views here.
 def register_view(request):
     if request.user.is_authenticated:
+        messages.warning(request, 'Already Signed In!')
         return redirect('home')
     
     form = Registerform()
@@ -29,139 +42,147 @@ def register_view(request):
             
             if user is not None:
                 login(request, user)
+                messages.success(request, 'Account Created and Login Successful')
                 return redirect('home')
             else:
+                messages.error(request, 'Invalid Username or Password')
                 return redirect('login')
         else:
             errors = form.errors.as_data()
+            messages.error(request, str(errors))
             return redirect('register')
         
     context = {
         'form': form,
         'errors': errors
     }
-    return render(request, 'register.html', context)
+    return render(request, 'tasks/register.html', context)
     
 
-# def home(request):   # request is compulsory for any view functionnyou are creating
-#     return HttpResponse('<h1>Welcome to codesignature\'s website<h1>')
-
+@login_required(login_url='login')
 def home(request):
-    date = datetime.now()
-    h = int(date.strftime('%H'))
-    
-    msg = 'Good '
-    
-    if h < 12:
-        msg  += 'morning'
-    elif h < 16:
-        msg += 'afternoon'
-    elif h < 18:
-        msg += 'evening'
-    else:
-        msg += 'night'
-        
-    greeting = f'{msg}! Stells'
-    tasks =Task.objects.all().order_by('-created_at')
-    # tasks = Task.objects.all()  # Fetch all tasks from the database
-    
-    # tasks = [
-    #     { 'id': 1, 'text': 'Cook rice and stew', 'done': True },
-    #     { 'id': 2, 'text': 'Wash the dishes', 'done': False },
-    #     { 'id': 3, 'text': 'Clean the house', 'done': False },
-    #     { 'id': 4, 'text': 'Hit the gym', 'done': False },
-    #     { 'id': 5, 'text': 'Prepare for the meeting', 'done': False },
-    #     { 'id': 6, 'text': 'Netflix and chill', 'done': False }
-        
-    # ]
+    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
+
+    total_tasks = tasks.count()
+    completed_tasks = tasks.filter(completed=True).count()
+    pending_tasks = tasks.filter(completed=False).count()
+
+    progress = 0
+    if total_tasks > 0:
+        progress = int((completed_tasks / total_tasks) * 100)
 
     context = {
-        'greeting': greeting,
-        'tasks': tasks
+        'greeting': get_greeting(),
+        'tasks': tasks,
+        'total_tasks': total_tasks,
+        'completed_tasks': completed_tasks,
+        'pending_tasks': pending_tasks,
+        'progress': progress,
     }
-    
-    return render(request, 'home.html', context)
+
+    return render(request, 'tasks/home.html', context)
 
 def login_view(request):
     if request.user.is_authenticated:
+        messages.warning(request, 'Already Logged In!')
         return redirect('home')
     
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        user = authenticate(request,username=username, password=password)
+        user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
+            messages.success(request, 'Login Successful!')
             return redirect('home')
         else:
+            messages.error(request, 'Invalid Username or Password!')
             return redirect("login")
-    return render(request, 'login.html')
+    return render(request, 'tasks/login.html')
+
 
 def logout_view(request):
-    user = request.user
     logout(request)
     return redirect('login')
 
+
+@login_required(login_url='login')
 def add_task(request):
     forms = TaskForm()
     if request.method == 'POST':
         forms = TaskForm(request.POST)
-        
-        # ========================= 
-        # check for form validation
-        # ==========================
         if forms.is_valid():
-            forms.save()
-        
+            instance = forms.save(commit=False)
+            instance.user = request.user
+            instance.save()
             return redirect('home')
-
         else:
             return redirect('add_task')
 
     context = {
         'forms': forms
     }
-    
-    return render(request, "add_tasks.html", context)
+    return render(request, "tasks/add_task.html", context)
 
+
+@login_required(login_url='login')
 def filter_tasks(request, foo):
+    # FIXED: Changed '==' to '=' below
     if foo == "true":
-        tasks = Task.objects.filter(done=True).order_by('-created_at')
+        tasks = Task.objects.filter(done=True, user=request.user).order_by('-created_at')
     elif foo == 'false':
-        tasks == Task.objects.filter(done=False).order_by('-updated_at')
+        tasks = Task.objects.filter(done=False, user=request.user).order_by('-updated_at')
     else:
-        tasks =Task.objects.all().order_by('-created_at')
+        tasks = Task.objects.filter(user=request.user).order_by('-created_at')
     
     context = {
+        'greeting': get_greeting(),  # Added so greeting doesn't break on filter pages
         'tasks': tasks
     }
-    return render(request,'home.html', context)
+    return render(request, 'tasks/home.html', context)
 
+
+@login_required(login_url='login')
 def update_task(request, pk):
-    task = Task.objects.get(id=pk)
-    task = get_object_or_404(Task, id=pk)
+    # FIXED: Removed the duplicate unsafe Task.objects.get line
+    task = get_object_or_404(Task, id=pk, user=request.user)
     form = TaskForm(instance=task)
     
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
-        
-        if form .is_valid():
+        if form.is_valid():  # FIXED: Removed space between form and .is_valid()
             form.save()
+            messages.success(request, 'Successfully Updated!')
             return redirect('home')
         else:
-            return redirect('task', pk=pk)
+            return redirect('update_task', pk=pk) # FIXED: Pointed back to update redirect name
         
     context = {
         'task': task,
         'form': form
     }
-    
-    return render(request, 'update_task.html', context)
+    return render(request, 'tasks/update_task.html', context)
 
+
+@login_required(login_url='login')
 def delete_task(request, pk):
-    task = get_object_or_404(Task, id=pk)
-    
+    # FIXED: Secure restriction added so users can only delete their own tasks
+    task = get_object_or_404(Task, id=pk, user=request.user)
     task.delete()
-    return redirect(home)
+    return redirect('home')  # FIXED: Passed string route name instead of function reference
+
+
+@login_required(login_url='login')
+def complete_task(request, pk):
+    task = get_object_or_404(
+        Task,
+        id=pk,
+        user=request.user
+    )
+
+    task.completed = not task.completed
+    task.save()
+
+    return redirect('home')

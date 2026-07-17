@@ -1,0 +1,169 @@
+/* Google Font */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:'Poppins',sans-serif;
+
+    background:#f5f7fb;
+
+    color:#2d3748;
+
+}
+
+/* Navbar */
+
+.navbar-custom{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 60px;
+
+    background:#ffffff;
+
+    box-shadow:0 5px 20px rgba(0,0,0,.05);
+
+}
+
+.logo a{
+
+    text-decoration:none;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#2563eb;
+
+}
+
+.navbar-custom ul{
+
+    display:flex;
+
+    list-style:none;
+
+    gap:20px;
+
+}
+
+.navbar-custom ul li a{
+
+    text-decoration:none;
+
+    color:#555;
+
+    font-weight:500;
+
+    transition:.3s;
+
+}
+
+.navbar-custom ul li a:hover{
+
+    color:#2563eb;
+
+}
+
+/* Container */
+
+.container{
+
+    max-width:1200px;
+
+}
+
+/* Cards */
+
+.card{
+
+    border:none;
+
+    border-radius:18px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+/* Buttons */
+
+.btn{
+
+    border-radius:10px;
+
+}
+
+.btn-primary{
+
+    background:#2563eb;
+
+    border:none;
+
+}
+
+.btn-primary:hover{
+
+    background:#1d4ed8;
+
+}
+
+/* Forms */
+
+.form-control{
+
+    border-radius:10px;
+
+    padding:12px;
+
+}
+
+.form-control:focus{
+
+    border-color:#2563eb;
+
+    box-shadow:0 0 0 .2rem rgba(37,99,235,.15);
+
+}
+
+/* Alerts */
+
+.alert{
+
+    border:none;
+
+    border-radius:12px;
+
+}
+
+/* Responsive */
+
+@media(max-width:768px){
+
+.navbar-custom{
+
+flex-direction:column;
+
+gap:20px;
+
+padding:20px;
+
+}
+
+.navbar-custom ul{
+
+flex-direction:column;
+
+align-items:center;
+
+}
+
+}

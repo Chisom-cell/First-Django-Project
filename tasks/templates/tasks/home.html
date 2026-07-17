@@ -1,0 +1,214 @@
+{% extends "tasks/base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="mb-4">
+        <h6 class="text-primary">Today</h6>
+        <p class="text-muted">{{ greeting }}</p>
+
+        <h1 class="fw-bold">
+            What needs <em>doing</em>?
+        </h1>
+
+        <p class="text-muted">
+            Stay organized by keeping track of your daily tasks.
+        </p>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Tasks</h6>
+                    <h2>{{ total_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Completed</h6>
+                    <h2 class="text-success">{{ completed_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Pending</h6>
+                    <h2 class="text-warning">{{ pending_tasks }}</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Progress -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between mb-2">
+                <strong>Progress</strong>
+                <strong>{{ progress }}%</strong>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar bg-success"
+                     role="progressbar"
+                     style="width: {{ progress }}%;"
+                     aria-valuenow="{{ progress }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <a href="{% url 'add_task' %}" class="btn btn-primary">
+            + Add New Task
+        </a>
+
+        <div>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary btn-sm">All</a>
+
+            <a href="{% url 'tasks' 'true' %}" class="btn btn-outline-success btn-sm">
+                Completed
+            </a>
+
+            <a href="{% url 'tasks' 'false' %}" class="btn btn-outline-warning btn-sm">
+                Pending
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Task List -->
+    {% if tasks %}
+
+        {% for task in tasks %}
+
+        <div class="card shadow-sm mb-3">
+
+            <div class="card-body">
+
+                <div class="row align-items-center">
+
+                    <div class="col-md-8">
+
+                        {% if task.completed %}
+                            <h4 class="text-decoration-line-through text-muted">
+                                {{ task.title }}
+                            </h4>
+
+                            <span class="badge bg-success mb-2">
+                                ✓ Completed
+                            </span>
+
+                        {% else %}
+
+                            <h4>{{ task.title }}</h4>
+
+                        {% endif %}
+
+                        {% if task.description %}
+                            <p class="text-muted">
+                                {{ task.description }}
+                            </p>
+                        {% endif %}
+
+                        {% if task.priority == "High" %}
+                            <span class="badge bg-danger">High Priority</span>
+
+                        {% elif task.priority == "Medium" %}
+                            <span class="badge bg-warning text-dark">
+                                Medium Priority
+                            </span>
+
+                        {% else %}
+                            <span class="badge bg-success">
+                                Low Priority
+                            </span>
+                        {% endif %}
+
+                        <small class="text-muted ms-2">
+                            Created {{ task.created_at|date:"F d, Y" }}
+                        </small>
+
+                    </div>
+
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+
+                        {% if task.completed %}
+
+                            <a href="{% url 'complete_task' task.id %}"
+                               class="btn btn-secondary btn-sm mb-2">
+                                ↩ Mark Incomplete
+                            </a>
+
+                        {% else %}
+
+                            <a href="{% url 'complete_task' task.id %}"
+                               class="btn btn-success btn-sm mb-2">
+                                ✓ Mark Complete
+                            </a>
+
+                        {% endif %}
+
+                        <br>
+
+                        <a href="{% url 'task' task.id %}"
+                           class="btn btn-warning btn-sm">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'delete' task.id %}"
+                           class="btn btn-danger btn-sm">
+                            Delete
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <h3>No Tasks Yet 🎉</h3>
+
+                <p class="text-muted">
+                    Click <strong>Add New Task</strong> to create your first task.
+                </p>
+
+                <a href="{% url 'add_task' %}" class="btn btn-primary">
+                    Create Task
+                </a>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
